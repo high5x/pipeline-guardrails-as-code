@@ -26,6 +26,10 @@ jobs:
         version: 'latest'
 
     - name: Generate Declarative Cloud Plan Matrix
+      env:
+        AWS_ACCESS_KEY_ID: mock-access-key-id
+        AWS_SECRET_ACCESS_KEY: mock-secret-access-key
+        AWS_DEFAULT_REGION: us-east-1
       run: |
         cd terraform
         terraform init -backend=false
@@ -36,7 +40,6 @@ jobs:
       run: |
         echo "=== STARTING INFRASTRUCTURE POLICY AUDIT ==="
         
-        # Paths are evaluated directly from the repository root context
         ALLOW_DECISION=$(opa eval --data policies/db_encryption_check.rego --input terraform/tfplan.json "data.terraform.security.allow" --format values)
         echo "Policy Evaluation Allow Status: $ALLOW_DECISION"
         
