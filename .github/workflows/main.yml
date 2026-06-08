@@ -1,4 +1,4 @@
-﻿name: Infrastructure Guardrail Pipeline
+name: Infrastructure Guardrail Pipeline
 
 on:
   push:
@@ -29,7 +29,6 @@ jobs:
       run: |
         cd terraform
         terraform init -backend=false
-        # The key fix: execute planning entirely offline without live cloud APIs
         terraform plan -refresh=false -out=tfplan.binary
         terraform show -json tfplan.binary > tfplan.json
 
