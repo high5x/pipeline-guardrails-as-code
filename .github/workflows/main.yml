@@ -20,46 +20,9 @@ jobs:
       with:
         version: 'latest'
 
-    - name: Mock Declarative Cloud Plan Matrix (Pure Offline)
+    - name: Execute OPA Native Compliance Test Suite
       run: |
-        mkdir -p terraform
-        cat << 'EOF' > terraform/tfplan.json
-        {
-          "resource_changes": [
-            {
-              "name": "secure_ebs",
-              "type": "aws_ebs_volume",
-              "change": {
-                "after": {
-                  "encrypted": true
-                }
-              }
-            },
-            {
-              "name": "secure_s3_ingress",
-              "type": "aws_s3_bucket_public_access_block",
-              "change": {
-                "after": {
-                  "block_public_acls": true
-                }
-              }
-            }
-          ]
-        }
-        EOF
-
-    - name: Execute OPA Rego Structural Audit
-      run: |
-        echo "=== STARTING INFRASTRUCTURE POLICY AUDIT ==="
-        
-        # Use standard -d (data/policy) and -i (input) flags for airtight CLI evaluation
-        opa eval -d policies/db_encryption_check.rego -i terraform/tfplan.json "data.terraform.security.violations" > result.json
-        cat result.json
-        
-        if grep -q "CRITICAL" result.json; then
-          echo "❌ CRITICAL FAILURE: Security violations identified by Policy Engine."
-          exit 1
-        else
-          echo "✅ SUCCESS: Infrastructure manifest complies with safety baselines."
-          exit 0
-        fi
+        echo "=== EXECUTING OPA NATIVE POLICY VERIFICATION ==="
+        # Run opa test against the entire policies folder.
+        # It will automatically find your rules and execute the test suite natively.
+        opa test ./policies -v
