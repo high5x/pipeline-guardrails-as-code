@@ -1,4 +1,4 @@
-﻿package terraform.security
+package terraform.security
 import rego.v1
 
 default allow := false
@@ -8,7 +8,7 @@ violations[msg] {
 resource := input.resource_changes[_]
 resource.type == "aws_ebs_volume"
 not resource.change.after.encrypted
-msg := sprintf("CRITICAL IAAC POSTURE BLOCKER: EBS volume '%v' is unencrypted.", [resource.name])
+msg := sprintf("CRITICAL IAC POSTURE BLOCKER: EBS volume '%v' is unencrypted.", [resource.name])
 }
 
 violations[msg] {
