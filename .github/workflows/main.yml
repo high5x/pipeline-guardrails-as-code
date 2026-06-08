@@ -23,7 +23,7 @@ jobs:
     - name: Setup Open Policy Agent (OPA) CLI Environment
       uses: open-policy-agent/setup-opa@v2
       with:
-        version: 'latest'
+        version: "latest"
 
     - name: Generate Declarative Cloud Plan Matrix
       run: |
@@ -37,12 +37,11 @@ jobs:
         echo "=== STARTING INFRASTRUCTURE POLICY AUDIT ==="
         ALLOW_DECISION=$(opa eval --data policies/db_encryption_check.rego --input terraform/tfplan.json "data.terraform.security.allow" --format values)
         echo "Policy Evaluation Allow Status: $ALLOW_DECISION"
-        
         if [ "$ALLOW_DECISION" = "true" ]; then
-          echo "✅ SUCCESS: Infrastructure manifest strictly complies with data-protection baselines."
+          echo "? SUCCESS: Infrastructure manifest strictly complies with data-protection baselines."
           exit 0
         else
-          echo "❌ CRITICAL FAILURE: Security violations identified by Policy Engine."
+          echo "? CRITICAL FAILURE: Security violations identified by Policy Engine."
           opa eval --data policies/db_encryption_check.rego --input terraform/tfplan.json "data.terraform.security.violations"
           exit 1
         fi
