@@ -1,0 +1,48 @@
+﻿name: Infrastructure Guardrail Pipeline
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  iac-security-gate:
+    name: Infrastructure-as-Code Policy Validation
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout Local Repository Context
+      uses: actions/checkout@v4
+
+    - name: Setup HashiCorp Terraform CLI
+      uses: hashicorp/setup-terraform@v3
+      with:
+        terraform_wrapper: false
+
+    - name: Setup Open Policy Agent (OPA) CLI Environment
+      uses: open-policy-agent/setup-opa@v2
+      with:
+        version: 'latest'
+
+    - name: Generate Declarative Cloud Plan Matrix
+      run: |
+        cd terraform
+        terraform init -backend=false
+        terraform plan -out=tfplan.binary
+        terraform show -json tfplan.binary > tfplan.json
+
+    - name: Execute OPA Rego Structural Audit
+      run: |
+        echo "=== STARTING INFRASTRUCTURE POLICY AUDIT ==="
+        ALLOW_DECISION=$(opa eval --data policies/db_encryption_check.rego --input terraform/tfplan.json "data.terraform.security.allow" --format values)
+        echo "Policy Evaluation Allow Status: $ALLOW_DECISION"
+        
+        if [ "$ALLOW_DECISION" = "true" ]; then
+          echo "✅ SUCCESS: Infrastructure manifest strictly complies with data-protection baselines."
+          exit 0
+        else
+          echo "❌ CRITICAL FAILURE: Security violations identified by Policy Engine."
+          opa eval --data policies/db_encryption_check.rego --input terraform/tfplan.json "data.terraform.security.violations"
+          exit 1
+        fi
