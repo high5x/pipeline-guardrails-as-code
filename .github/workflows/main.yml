@@ -29,7 +29,8 @@ jobs:
       run: |
         cd terraform
         terraform init -backend=false
-        terraform plan -out=tfplan.binary
+        # FIXED: Added -refresh=false to decouple the plan from live cloud provider APIs
+        terraform plan -refresh=false -out=tfplan.binary
         terraform show -json tfplan.binary > tfplan.json
 
     - name: Execute OPA Rego Structural Audit
