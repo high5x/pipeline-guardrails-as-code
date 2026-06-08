@@ -22,7 +22,6 @@ jobs:
 
     - name: Mock Declarative Cloud Plan Matrix (Pure Offline)
       run: |
-        # Instead of risking provider network calls, generate a direct input mock that matches the expected OPA schema perfectly
         mkdir -p terraform
         cat << 'EOF' > terraform/tfplan.json
         {
@@ -53,8 +52,8 @@ jobs:
       run: |
         echo "=== STARTING INFRASTRUCTURE POLICY AUDIT ==="
         
-        # Evaluate the violations directly using our clean path
-        opa eval --data policies/db_encryption_check.rego --input terraform/tfplan.json "data.terraform.security.violations" > result.json
+        # Use standard -d (data/policy) and -i (input) flags for airtight CLI evaluation
+        opa eval -d policies/db_encryption_check.rego -i terraform/tfplan.json "data.terraform.security.violations" > result.json
         cat result.json
         
         if grep -q "CRITICAL" result.json; then
