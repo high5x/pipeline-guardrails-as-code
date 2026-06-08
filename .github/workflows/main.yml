@@ -34,15 +34,17 @@ jobs:
 
     - name: Execute OPA Rego Structural Audit
       run: |
-        echo '=== STARTING INFRASTRUCTURE POLICY AUDIT ==='
-        ALLOW_DECISION=$(opa eval --data ../policies/db_encryption_check.rego --input terraform/tfplan.json 'data.terraform.security.allow' --format values)
+        echo "=== STARTING INFRASTRUCTURE POLICY AUDIT ==="
+        
+        # Paths are evaluated directly from the repository root context
+        ALLOW_DECISION=$(opa eval --data policies/db_encryption_check.rego --input terraform/tfplan.json "data.terraform.security.allow" --format values)
         echo "Policy Evaluation Allow Status: $ALLOW_DECISION"
         
         if [ "$ALLOW_DECISION" = "true" ]; then
-          echo '✅ SUCCESS: Infrastructure manifest complies with safety baselines.'
+          echo "✅ SUCCESS: Infrastructure manifest complies with safety baselines."
           exit 0
         else
-          echo '❌ CRITICAL FAILURE: Security violations identified by Policy Engine.'
-          opa eval --data ../policies/db_encryption_check.rego --input terraform/tfplan.json 'data.terraform.security.violations'
+          echo "❌ CRITICAL FAILURE: Security violations identified by Policy Engine."
+          opa eval --data policies/db_encryption_check.rego --input terraform/tfplan.json "data.terraform.security.violations"
           exit 1
         fi
