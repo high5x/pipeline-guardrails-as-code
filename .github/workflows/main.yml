@@ -29,7 +29,7 @@ jobs:
       run: |
         cd terraform
         terraform init -backend=false
-        # FIXED: Added -refresh=false to decouple the plan from live cloud provider APIs
+        # The key fix: execute planning entirely offline without live cloud APIs
         terraform plan -refresh=false -out=tfplan.binary
         terraform show -json tfplan.binary > tfplan.json
 
